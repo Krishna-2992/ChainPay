@@ -54,6 +54,9 @@ function App() {
                 console.log('connected accounts:', accounts)
                 await listenToEvent(signer)
             }
+            else{
+                alert("please install metamask!!")
+            }
         } catch (error) {
             console.log(error)
             console.log('💥💥')
