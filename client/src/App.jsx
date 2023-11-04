@@ -38,14 +38,14 @@ function App() {
 
     const connectWallet = async () => {
         try {
-            if (window.ethereum !== 'undefined') {
+            if (window.ethereum) {
                 const accounts = await window.ethereum.request({
                     method: 'eth_requestAccounts',
                 })
                 const provider = new ethers.providers.Web3Provider(
                     window.ethereum
                 )
-                const signer = await provider.getSigner()
+                const signer = await provider.getSigner()[[]]
                 console.log('signer', signer)
                 setProvider(provider)
                 setSigner(signer)
