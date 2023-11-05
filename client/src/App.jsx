@@ -45,7 +45,7 @@ function App() {
                 const provider = new ethers.providers.Web3Provider(
                     window.ethereum
                 )
-                const signer = await provider.getSigner()[[]]
+                const signer = await provider.getSigner()
                 console.log('signer', signer)
                 setProvider(provider)
                 setSigner(signer)
@@ -53,9 +53,8 @@ function App() {
 
                 console.log('connected accounts:', accounts)
                 await listenToEvent(signer)
-            }
-            else{
-                alert("please install metamask!!")
+            } else {
+                alert('please install metamask!!')
             }
         } catch (error) {
             console.log(error)
@@ -84,31 +83,55 @@ function App() {
         console.log(balanceInEther)
         console.log(payableETH)
 
-        if( balanceInEther < payableETH) { 
+        if (balanceInEther < payableETH) {
             console.log('label1 true')
-            return true } // means insufficient balance
-        else {return false}
+            return true
+        } // means insufficient balance
+        else {
+            return false
+        }
     }
 
-    
+    async function getChainId() {
+        const chainId = await window.ethereum.request({
+            method: 'eth_chainId',
+        })
+        return chainId
+    }
 
     async function sendEtherToVault() {
         if (!signer) {
             alert('please connect your sepolia wallet first')
+        } else if (await insufficientBalance()) {
+            alert('insufficient balanceeeee in your connected account')
+            await provider.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: 11155111 }],
+            })
+        } else if ((await getChainId()) !== '0xaa36a7') {
+            alert(
+                'currently we only receive sepolia, so please switch into that network'
+            )
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0xaa36a7' }],
+                })
+            } catch (err) {
+                console.log(err)
+            }
         } else {
-            if(await insufficientBalance()){
-                alert('insufficient balanceeeee in your connected account')
+            const transaction = {
+                to: vaultAddress,
+                value: ethers.utils.parseEther(payableETH.toString()),
             }
-            else{
-                const transaction = {
-                    to: vaultAddress,
-                    value: ethers.utils.parseEther(payableETH.toString()),
-                }
-                const txHash = await signer.sendTransaction(transaction)
-                // await provider.waitForTransaction(txHash)
-    
-                console.log('Transaction sent!')
-            }
+            const txHash = await signer.sendTransaction(transaction)
+            // await provider.waitForTransaction(txHash)
+
+            console.log('Transaction sent!')
+            document.querySelector('#confirmationMessage').innerHTML = `
+                    Processing...please wait
+                `
         }
     }
 
@@ -117,11 +140,7 @@ function App() {
             <div className='flex flex-col'>
                 <div>
                     <button onClick={connectWallet} className='m-8 p-4'>
-                        {
-                            !signer ? 
-                            "Connect Wallet" : 
-                            "Connected"
-                        }
+                        {!signer ? 'Connect Wallet' : 'Connected'}
                     </button>
                 </div>
                 <div>
